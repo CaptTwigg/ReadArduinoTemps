@@ -1,4 +1,6 @@
+import glob
 import json
+import sys
 from datetime import datetime
 
 import firebase_admin
@@ -34,15 +36,41 @@ class MyFirebase:
 
 class MySerial:
     def __init__(self):
-        self.com = serial.Serial(port="COM3", baudrate=9600)
+        port = self.getPorts()
+        if (port):
+            self.com = serial.Serial(port=port[0], baudrate=9600)
+        else:
+            raise serial.SerialException("No port found")
 
     def readLine(self) -> dict:
         rawData = self.com.readline().decode("utf-8")
         return json.loads(rawData)
+
+    def getPorts(self):
+        if sys.platform.startswith('win'):
+            ports = ['COM%s' % (i + 1) for i in range(256)]
+        elif sys.platform.startswith('linux') or sys.platform.startswith('cygwin'):
+            # this excludes your current terminal "/dev/tty"
+            ports = glob.glob('/dev/tty[A-Za-z]*')
+        elif sys.platform.startswith('darwin'):
+            ports = glob.glob('/dev/tty.*')
+        else:
+            raise EnvironmentError('Unsupported platform')
+
+        result = []
+        # checks all ports and append available ports to result
+        for port in ports:
+            try:
+                s = serial.Serial(port)
+                s.close()
+                result.append(port)
+            except (OSError, serial.SerialException):
+                pass
+        return result
 
 
 if __name__ == '__main__':
     db = MyFirebase()
     ser = MySerial()
     db.addReading(**ser.readLine())
-    db.readAllAndPrint()
+    # db.readAllAndPrint()
