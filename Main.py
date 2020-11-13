@@ -1,7 +1,9 @@
 import glob
 import json
 import sys
+import time
 from datetime import datetime
+import logging
 
 import firebase_admin
 import serial
@@ -38,13 +40,14 @@ class MySerial:
     def __init__(self):
         port = self.getPorts()
         if (port):
-            self.com = serial.Serial(port=port[0], baudrate=9600)
+            self.com = serial.Serial(port=port[0], baudrate=9600, timeout=1)
+            self.rawData = ""
         else:
             raise serial.SerialException("No port found")
 
     def readLine(self) -> dict:
-        rawData = self.com.readline().decode("utf-8")
-        return json.loads(rawData)
+        self.rawData = self.com.readline().decode("utf-8")
+        return json.loads(self.rawData)
 
     def getPorts(self):
         if sys.platform.startswith('win'):
@@ -70,7 +73,16 @@ class MySerial:
 
 
 if __name__ == '__main__':
+    logger = logging.getLogger('log')
+    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
     db = MyFirebase()
     ser = MySerial()
-    db.addReading(**ser.readLine())
+    while(True):
+        try:
+            db.addReading(**ser.readLine())
+            time.sleep(1*60*30)
+        except Exception as e:
+            logging.error("Loop failed", exc_info=True)
+            logging.error(f"Raw data{ser.rawData}", exc_info=True)
+            time.sleep(1 * 60)
     # db.readAllAndPrint()
