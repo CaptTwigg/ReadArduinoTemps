@@ -74,7 +74,7 @@ class MySerial:
 
 if __name__ == '__main__':
     logger = logging.getLogger('log')
-    logging.basicConfig(filename='app.log', filemode='w', format='%(name)s - %(levelname)s - %(message)s')
+    logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     db = MyFirebase()
     ser = MySerial()
     while(True):
