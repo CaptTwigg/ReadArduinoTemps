@@ -39,7 +39,7 @@ if __name__ == '__main__':
         try:
             humidity, temperature = Adafruit_DHT.read_retry(11, 4,delay_seconds=0)
             db.addReading(temperature, humidity)
-            time.sleep(60.0 - ((time.time() - starttime) % 60.0))
+            time.sleep(60.0 * 60 - ((time.time() - starttime) % 60.0* 60))
         except Exception as e:
             logging.error("Loop failed", exc_info=True)
             traceback.print_stack()
