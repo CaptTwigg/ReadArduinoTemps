@@ -7,7 +7,6 @@ from datetime import datetime
 import logging
 
 import firebase_admin
-import serial
 from firebase_admin import credentials, firestore
 
 import Adafruit_DHT
@@ -35,11 +34,12 @@ if __name__ == '__main__':
     logger = logging.getLogger('log')
     logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     db = MyFirebase()
+    starttime = time.time()
     while(True):
         try:
             humidity, temperature = Adafruit_DHT.read_retry(11, 4,delay_seconds=0)
             db.addReading(temperature, humidity)
-            time.sleep(1*60*30)
+            time.sleep(60.0 - ((time.time() - starttime) % 60.0))
         except Exception as e:
             logging.error("Loop failed", exc_info=True)
             traceback.print_stack()
